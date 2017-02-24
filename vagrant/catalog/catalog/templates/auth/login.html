@@ -1,0 +1,88 @@
+{% extends "_main.html" %}
+
+{% block page_header %}
+
+<h1>Login</h1>
+
+{% endblock %}
+
+
+{% block content %}
+
+<!-- Google Sign-in (new) -->
+<!-- <div class="g-signin2"
+  data-scope="profile email"
+  data-redirecturi="postmessage"
+  data-accesstype="offline"
+  data-onsuccess="onSignIn"
+  data-onfailure="onSignInFailure">
+</div>
+ -->
+
+<div class="text-center">
+  <div class="row">
+    <!-- Google sign-in button -->
+    <!-- Use an image that follows the branding guidelines in a real app -->
+    <button id="g-signin-button">Sign in with Google</button>
+    <script>
+      $('#g-signin-button').click(function() {
+        auth2.grantOfflineAccess({'redirect_uri': 'postmessage'}).then(signInCallback);
+      });
+    </script>
+  </div>
+  <div class="row">
+    <div id="result"></div>
+  </div>
+</div>
+
+
+<!-- Last part of BODY element in file index.html -->
+<script>
+function signInCallback(authResult) {
+  if (authResult['code']) {
+    console.log("code: " + authResult['code'])
+
+    // Hide the sign-in button now that the user is authorized, for example:
+    $('#signinButton').attr('style', 'display: none');
+
+    // Send the code to the server
+    $.ajax({
+      type: 'POST',
+      url: '/google_connect',
+      contentType: 'application/octet-stream; charset=utf-8',
+      success: function(result) {
+        // Handle or verify the server response.
+        if(result) {
+            $('#result').html('<br/><p>Login Successful!</p>' + result + '<p>Redirecting...</p>');
+            setTimeout(function() {
+                window.location.href = '{{ next }}'
+            }, 5000)
+        }
+        else if (authResult['error']) {
+            console.log('There was an error: ' + authResult['error']);
+        }
+        else {
+            $('#result').html('Failed to make a server-side call. Check your configuration and console.');
+        }
+      },
+      error: function(xhr, status, error) {
+        console.log("status: " + status);
+        console.log("error: " + error);
+        console.log("response status: " + xhr.status);
+        console.log("response text: " + xhr.responseText);
+
+        errorMsg = "Failed to connect: " + xhr.responseText;
+        console.log(errorMsg)
+        alert(errorMsg)
+        $('#result').html(errorMsg);
+      },
+      processData: false,
+      data: authResult['code']
+    });
+  } else {
+    // There was an error.
+  }
+}
+</script>
+
+{% endblock %}
